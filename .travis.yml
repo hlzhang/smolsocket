@@ -1,10 +1,10 @@
 branches:
   only:
     - develop
-    - "/^feature\/.*$/"
-    - "/^hotfix\/.*$/"
-    - "/^release\/.*$/"
-    - "/^support\/.*$/"
+    - /^feature\/.*$/
+    - /^hotfix\/.*$/
+    - /^release\/.*$/
+    - /^support\/.*$/
 dist: xenial
 env:
   global:
@@ -21,7 +21,7 @@ deploy:
     secure: BNRvZe7bCUqIs9vISN4z2B3VZr4gIi2KF2g5GMMjkDQRlPBWhYyu2i4YWRuGqCU4rhiuKPdR9NpaQjsHtyW0XOVsk65AxphUwRJUkzFvQ61KWwbnU7i04z5cCwZddXEo4Wg28gsrmUEO9srjcbbc/HFPVXVaTG/qLoNRr1VU7cj9ZE+ZWjGgrbWQYy3fFPr5xY8vAHdcZk8TSRYWitRrIRob7dijwvB492WYlhmgw/5PecqvDgWyyRXj3D4ki6IZ0QyCPpnedDeFiCWtF9zKUu4J0VjCO9xbamnpblXH3Y/cPE5IPIKlxzNMEm2UUsbKzF8usZ1oxw+8J4ovYUKC2cxVKNwFg407zswBi9gZNbYwbqs68jBYm7pcMrsZbZpdUQfKDIwxPOktKMu9VJcV6jAFOmUmb4CexuCgtA8ihJKSeiN0LnoaWmqyp3rsSXNr3wVPgkrb1Oi2XGbJIKysiTE47c4T/EYEcaGQmu26uv1kgS/WAvQcjpWqmNoRegKnrlICDVPjEy9jqRwvx7ukQHv/tlhK3SGAeF8EN/yLFglUjhDWxykkbmMUPc5dI6olDUVUh6uMVGvFQjPKNHBQ7lSsWEogM02+GNHSpeQFsDuoKtpqShBH96VJjYnZdgNC3wcwN8/Wy5o3WR0GkJybHbAEVua6Q3O+GCqELlQHspM=
   on:
     all_branches: false
-    branch: "/^release\\/.*$/"
+    branch: /^release\/.*$/
     tags: false
 after_deploy:
   - echo "after_deploy";
