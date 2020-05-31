@@ -62,7 +62,6 @@ jobs:
       #- run: cargo test --all --all-features
       - run: RUST_BACKTRACE=full cargo test --verbose --all --no-default-features --features default -- --exact --nocapture --test-threads=1
       - run: |
-          ./regenerate.sh
           if [[ -n "$(git status --porcelain)" ]]; then
             git status
             exit 1
