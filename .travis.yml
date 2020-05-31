@@ -1,10 +1,10 @@
 branches:
   only:
     - develop
-    - "/^feature\\/.*$/"
-    - "/^hotfix\\/.*$/"
-    - "/^release\\/.*$/"
-    - "/^support\\/.*$/"
+    - "/^feature\/.*$/"
+    - "/^hotfix\/.*$/"
+    - "/^release\/.*$/"
+    - "/^support\/.*$/"
 dist: xenial
 env:
   global:
@@ -38,6 +38,6 @@ rust:
   - beta
   - nightly
 script:
-  - cargo build --verbose --all cargo test --verbose --all --no-default-features --features;
-    default -- --exact --nocapture --test-threads=1;
+  - cargo build --verbose --all;
+    cargo test --verbose --all --no-default-features --features default -- --exact --nocapture --test-threads=1;
 sudo: false
