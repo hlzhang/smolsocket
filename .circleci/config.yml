@@ -59,7 +59,8 @@ jobs:
       - restore_target: { job: test }
       - run: cargo clippy --all --all-targets
       - run: cargo fmt --all -- --check
-      - run: cargo test --all --all-features
+      #- run: cargo test --all --all-features
+      - run: RUST_BACKTRACE=full cargo test --verbose --all --no-default-features --features default -- --exact --nocapture --test-threads=1
       - run: |
           ./regenerate.sh
           if [[ -n "$(git status --porcelain)" ]]; then
