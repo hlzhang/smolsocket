@@ -1,20 +1,20 @@
 branches:
   only:
-  - develop
-  - "/^feature\\/.*$/"
-  - "/^hotfix\\/.*$/"
-  - "/^release\\/.*$/"
-  - "/^support\\/.*$/"
+    - develop
+    - "/^feature\\/.*$/"
+    - "/^hotfix\\/.*$/"
+    - "/^release\\/.*$/"
+    - "/^support\\/.*$/"
 dist: xenial
 env:
   global:
     - RUST_BACKTRACE=full
 group: edge
 before_cache:
-  - echo "before_cache" rm -rf "$TRAVIS_HOME/.cargo/registry/src"
+  - echo "before_cache" rm -rf "$TRAVIS_HOME/.cargo/registry/src";
 cache: cargo
 before_deploy:
-- echo "before_deploy"
+  - echo "before_deploy";
 deploy:
   provider: cargo
   token:
@@ -24,20 +24,20 @@ deploy:
     branch: "/^release\\/.*$/"
     tags: false
 after_deploy:
-- echo "after_deploy"
+  - echo "after_deploy";
 before_install:
-  - echo "before_install" ls -la
+  - echo "before_install" ls -la;
 install: true
 jobs:
   allow_failures:
-  - rust: nightly
+    - rust: nightly
   fast_finish: true
 language: rust
 rust:
-- stable
-- beta
-- nightly
+  - stable
+  - beta
+  - nightly
 script:
-- cargo build --verbose --all cargo test --verbose --all --no-default-features --features
-  default -- --exact --nocapture --test-threads=1
+  - cargo build --verbose --all cargo test --verbose --all --no-default-features --features;
+    default -- --exact --nocapture --test-threads=1;
 sudo: false
