@@ -85,27 +85,27 @@ jobs:
           root: /
           paths: root/project/target/x86_64-unknown-linux-musl/release/*smolsocket*
 
-#  # macos is not included free version
-#  test-on-macos:
-#    macos:
-#      xcode: 10.1.0
-#    environment:
-#      RUSTUP_HOME: /Users/distiller/usr/local/rustup
-#      CARGO_HOME: /Users/distiller/usr/local/cargo
-#    working_directory: /Users/distiller/root/project
-#    steps:
-#      - attach_workspace: { at: /Users/distiller }
-#      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path --default-toolchain 1.41.0
-#      - run: sudo ln -s $CARGO_HOME/bin/* /usr/local/bin
-#      - restore_target: { job: test-on-macos }
-#      - run: |
-#          cargo test --verbose --all --no-default-features --features default -- --exact --nocapture --test-threads=1
-#          cargo build --release --target x86_64-apple-darwin
-#      #- run: strip target/x86_64-apple-darwin/release/binary
-#      - save_target: { job: test-on-macos }
-#      - persist_to_workspace:
-#          root: /Users/distiller
-#          paths: root/project/target/x86_64-apple-darwin/release/*smolsocket*
+  #  # macos is not included free version
+  #  test-on-macos:
+  #    macos:
+  #      xcode: 10.1.0
+  #    environment:
+  #      RUSTUP_HOME: /Users/distiller/usr/local/rustup
+  #      CARGO_HOME: /Users/distiller/usr/local/cargo
+  #    working_directory: /Users/distiller/root/project
+  #    steps:
+  #      - attach_workspace: { at: /Users/distiller }
+  #      - run: curl https://sh.rustup.rs -sSf | sh -s -- -y --no-modify-path --default-toolchain 1.41.0
+  #      - run: sudo ln -s $CARGO_HOME/bin/* /usr/local/bin
+  #      - restore_target: { job: test-on-macos }
+  #      - run: |
+  #          cargo test --verbose --all --no-default-features --features default -- --exact --nocapture --test-threads=1
+  #          cargo build --release --target x86_64-apple-darwin
+  #      #- run: strip target/x86_64-apple-darwin/release/binary
+  #      - save_target: { job: test-on-macos }
+  #      - persist_to_workspace:
+  #          root: /Users/distiller
+  #          paths: root/project/target/x86_64-apple-darwin/release/*smolsocket*
 
   test-on-windows:
     executor: win/vs2019
@@ -147,11 +147,12 @@ workflows:
           filters:
             tags: { only: /.*/ }
             branches: { ignore: /.*/ }
-      - test-on-macos:
-          requires: [checkout]
-          filters:
-            tags: { only: /.*/ }
-            branches: { ignore: /.*/ }
+      ## macos is not included free version
+      #- test-on-macos:
+      #    requires: [checkout]
+      #    filters:
+      #      tags: { only: /.*/ }
+      #      branches: { ignore: /.*/ }
       - test-on-windows:
           requires: [checkout]
           filters:
