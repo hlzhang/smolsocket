@@ -57,6 +57,7 @@ pub enum SocketAddr {
     V6(SocketAddrV6),
 }
 
+#[allow(clippy::len_without_is_empty)]
 #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl SocketAddr {
     pub fn new(ip: IpAddress, port: u16) -> Result<Self> {
@@ -80,6 +81,7 @@ impl SocketAddr {
         SocketAddr::V6(SocketAddrV6::new(ip, port))
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn new_ip6_port(
         a0: u16,
         a1: u16,
@@ -185,6 +187,8 @@ mod ipv4 {
         pub port: u16,
     }
 
+    #[allow(clippy::len_without_is_empty)]
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     impl SocketAddrV4 {
         pub fn new(addr: Ipv4Address, port: u16) -> Self {
             SocketAddrV4 { addr, port }
@@ -240,6 +244,7 @@ mod ipv6 {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn ipv6_addr(
         a0: u16,
         a1: u16,
@@ -268,11 +273,14 @@ mod ipv6 {
         pub port: u16,
     }
 
+    #[allow(clippy::len_without_is_empty)]
+    #[allow(clippy::trivially_copy_pass_by_ref)]
     impl SocketAddrV6 {
         pub fn new(addr: Ipv6Address, port: u16) -> Self {
             SocketAddrV6 { addr, port }
         }
 
+        #[allow(clippy::too_many_arguments)]
         pub fn new_ip6_port(
             a0: u16,
             a1: u16,
