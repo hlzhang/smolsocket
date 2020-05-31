@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 byteorder = "1"
 log = "0.4"
-smoltcp = { version = "0.6.0", default-features = false, features = [ "proto-ipv4", "proto-ipv6" ] }
+smoltcp = { version = "0.6.0", default-features = false, features = [] }
 
 [dev-dependencies]
 pretty_env_logger = "0.3"
@@ -17,8 +17,8 @@ pretty_env_logger = "0.3"
 [features]
 std = ["smoltcp/std"]
 verbose = []
-"proto-ipv4" = []
-"proto-ipv6" = []
+"proto-ipv4" = ["smoltcp/proto-ipv4"]
+"proto-ipv6" = ["smoltcp/proto-ipv6"]
 # `RUST_BACKTRACE=1 cargo test --lib --no-default-features --features default -- --exact --nocapture --test-threads=1`
 default = [
   "std",
