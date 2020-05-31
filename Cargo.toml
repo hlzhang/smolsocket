@@ -1,0 +1,26 @@
+[package]
+name = "smolsocket"
+version = "0.1.0"
+authors = ["hlzhang <hlzhang@users.noreply.github.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+byteorder = "1"
+log = "0.4"
+smoltcp = { version = "0.6.0", default-features = false, features = [ "proto-ipv4", "proto-ipv6" ] }
+
+[dev-dependencies]
+pretty_env_logger = "0.3"
+
+[features]
+std = ["smoltcp/std"]
+verbose = []
+"proto-ipv4" = []
+"proto-ipv6" = []
+# `RUST_BACKTRACE=1 cargo test --lib --no-default-features --features default -- --exact --nocapture --test-threads=1`
+default = [
+  "std",
+  "proto-ipv4", "proto-ipv6"
+]
