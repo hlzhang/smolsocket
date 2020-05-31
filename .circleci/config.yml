@@ -130,8 +130,11 @@ jobs:
     executor: rust
     steps:
       - attach_workspace: { at: / }
+      # see: https://doc.rust-lang.org/cargo/reference/publishing.html
       - run: |
           echo "publish to crates.io"
+#          cargo publish --allow-dirty --dry-run
+#          cargo package --allow-dirty --list
 
 workflows:
   version: 2

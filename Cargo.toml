@@ -3,6 +3,19 @@ name = "smolsocket"
 version = "0.1.0"
 authors = ["hlzhang <hlzhang@users.noreply.github.com>"]
 edition = "2018"
+license-file = "LICENSE.md"
+description = "SocketAddr based on smoltcp's IpAddress"
+homepage = "https://github.com/hlzhang/smolsocket/"
+repository = "https://github.com/hlzhang/smolsocket/"
+documentation = "https://docs.rs/smolsocket"
+readme = "README.md"
+exclude = [
+    ".circleci/*",
+    ".gitignore",
+    ".travis.yml",
+    ".versionrc.js",
+    "ver",
+]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
