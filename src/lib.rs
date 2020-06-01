@@ -20,6 +20,9 @@ pub use crate::std::*;
 
 type Result<T> = core::result::Result<T, Error>;
 
+pub const LEN_V4: usize = 6;
+pub const LEN_V6: usize = 18;
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
     AddrParseError,
@@ -73,12 +76,34 @@ impl SocketAddr {
         SocketAddr::V4(SocketAddrV4::new(ip, port))
     }
 
+    pub fn v4_from_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() == LEN_V4 {
+            let ip_addr = ipv4_addr_from_bytes(&bytes[0..LEN_V4 - 2])?;
+            let port_bytes = &bytes[LEN_V4 - 2..LEN_V4];
+            let port = port_from_bytes(port_bytes[0], port_bytes[1]);
+            Ok(SocketAddr::new_v4(ip_addr, port))
+        } else {
+            Err(Error::AddrParseError)
+        }
+    }
+
     pub fn new_ip4_port(a0: u8, a1: u8, a2: u8, a3: u8, port: u16) -> Self {
         SocketAddr::V4(SocketAddrV4::new_ip4_port(a0, a1, a2, a3, port))
     }
 
     pub fn new_v6(ip: Ipv6Address, port: u16) -> Self {
         SocketAddr::V6(SocketAddrV6::new(ip, port))
+    }
+
+    pub fn v6_from_bytes(bytes: &[u8]) -> Result<Self> {
+        if bytes.len() == LEN_V6 {
+            let ip_addr = ipv6_addr_from_bytes(&bytes[0..LEN_V6 - 2])?;
+            let port_bytes = &bytes[LEN_V6 - 2..LEN_V6];
+            let port = port_from_bytes(port_bytes[0], port_bytes[1]);
+            Ok(SocketAddr::new_v6(ip_addr, port))
+        } else {
+            Err(Error::AddrParseError)
+        }
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -167,7 +192,7 @@ mod ipv4 {
 
     use smoltcp::wire::Ipv4Address;
 
-    use super::{port_to_bytes, Error, Result};
+    use super::{port_to_bytes, Error, Result, LEN_V4};
 
     pub fn ipv4_addr_from_bytes(bytes: &[u8]) -> Result<Ipv4Address> {
         if bytes.len() == 4 {
@@ -202,7 +227,7 @@ mod ipv4 {
         }
 
         pub fn len(&self) -> usize {
-            6
+            LEN_V4
         }
 
         pub fn to_vec(&self) -> Vec<u8> {
@@ -233,7 +258,7 @@ mod ipv6 {
     use byteorder::{BigEndian, ByteOrder};
     use smoltcp::wire::Ipv6Address;
 
-    use super::{port_to_bytes, Error, Result};
+    use super::{port_to_bytes, Error, Result, LEN_V6};
 
     #[cfg(all(feature = "proto-ipv6"))]
     pub fn ipv6_addr_from_bytes(bytes: &[u8]) -> Result<Ipv6Address> {
@@ -299,7 +324,7 @@ mod ipv6 {
         }
 
         pub fn len(&self) -> usize {
-            18
+            LEN_V6
         }
 
         pub fn to_vec(&self) -> Vec<u8> {
@@ -477,7 +502,7 @@ mod tests {
         let socket_addr = SocketAddrV4::new_ip4_port(127, 0, 0, 1, 8080);
         info!("socket_addr: {}", socket_addr);
         info!("socket_addr debug: {:?}", socket_addr);
-        assert_eq!(socket_addr.len(), 6);
+        assert_eq!(socket_addr.len(), LEN_V4);
         assert_eq!(socket_addr.addr.as_bytes(), &ip_address_bytes);
         assert_eq!(
             socket_addr.addr.as_bytes(),
@@ -505,7 +530,7 @@ mod tests {
         let socket_addr = SocketAddrV6::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, 8080);
         info!("socket_addr: {}", socket_addr);
         info!("socket_addr debug: {:?}", socket_addr);
-        assert_eq!(socket_addr.len(), 18);
+        assert_eq!(socket_addr.len(), LEN_V6);
         assert_eq!(socket_addr.addr.as_bytes(), &ip_address_bytes);
         assert_eq!(
             socket_addr.addr.as_bytes(),
@@ -530,7 +555,7 @@ mod tests {
         assert_eq!(std_ip_address, Ok(IpAddr::V4(Ipv4Addr::new(127, 0, 0, 1))));
 
         let socket_addr_v4 = SocketAddrV4::new(ip_address, 80);
-        assert_eq!(socket_addr_v4.len(), 6);
+        assert_eq!(socket_addr_v4.len(), LEN_V4);
         let socket_addr = SocketAddr::V4(socket_addr_v4);
         assert_eq!(
             Ok(socket_addr),
@@ -542,7 +567,7 @@ mod tests {
         );
         assert_eq!(socket_addr, SocketAddr::new_v4(ip_address, 80));
         assert_eq!(socket_addr, SocketAddr::new_ip4_port(127, 0, 0, 1, 80));
-        assert_eq!(socket_addr.len(), 6);
+        assert_eq!(socket_addr.len(), LEN_V4);
         assert_eq!(socket_addr.ip().as_bytes(), ip_address_bytes);
         assert_eq!(socket_addr.ip_octets(), ip_address_bytes);
         let socket_addr_vec = socket_addr.to_vec();
@@ -577,7 +602,7 @@ mod tests {
         );
 
         let socket_addr_v6 = SocketAddrV6::new(ip_address, 80);
-        assert_eq!(socket_addr_v6.len(), 18);
+        assert_eq!(socket_addr_v6.len(), LEN_V6);
         let socket_addr = SocketAddr::V6(socket_addr_v6);
         assert_eq!(
             Ok(socket_addr),
@@ -592,7 +617,7 @@ mod tests {
             socket_addr,
             SocketAddr::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, 80)
         );
-        assert_eq!(socket_addr.len(), 18);
+        assert_eq!(socket_addr.len(), LEN_V6);
         assert_eq!(socket_addr.ip().as_bytes(), ip_address_bytes);
         assert_eq!(socket_addr.ip_octets(), ip_address_bytes);
         let socket_addr_vec = socket_addr.to_vec();
