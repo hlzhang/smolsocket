@@ -4,18 +4,18 @@ extern crate log;
 use core::fmt;
 
 use byteorder::{BigEndian, ByteOrder};
-#[cfg(all(feature = "proto-ipv4"))]
+#[cfg(feature = "proto-ipv4")]
 use smoltcp::wire::Ipv4Address;
-#[cfg(all(feature = "proto-ipv6"))]
+#[cfg(feature = "proto-ipv6")]
 use smoltcp::wire::Ipv6Address;
 #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
 use smoltcp::wire::{IpAddress, IpEndpoint};
 
-#[cfg(all(feature = "proto-ipv4"))]
+#[cfg(feature = "proto-ipv4")]
 pub use crate::ipv4::{ipv4_addr, ipv4_addr_from_bytes, SocketAddrV4};
-#[cfg(all(feature = "proto-ipv6"))]
+#[cfg(feature = "proto-ipv6")]
 pub use crate::ipv6::{ipv6_addr, ipv6_addr_from_bytes, SocketAddrV6};
-#[cfg(all(feature = "std"))]
+#[cfg(feature = "std")]
 pub use crate::std::*;
 
 type Result<T> = core::result::Result<T, Error>;
@@ -186,7 +186,7 @@ impl fmt::Debug for SocketAddr {
     }
 }
 
-#[cfg(all(feature = "proto-ipv4"))]
+#[cfg(feature = "proto-ipv4")]
 mod ipv4 {
     use core::fmt;
 
@@ -251,7 +251,7 @@ mod ipv4 {
     }
 }
 
-#[cfg(all(feature = "proto-ipv6"))]
+#[cfg(feature = "proto-ipv6")]
 mod ipv6 {
     use core::fmt;
 
@@ -260,7 +260,7 @@ mod ipv6 {
 
     use super::{port_to_bytes, Error, Result, LEN_V6};
 
-    #[cfg(all(feature = "proto-ipv6"))]
+    #[cfg(feature = "proto-ipv6")]
     pub fn ipv6_addr_from_bytes(bytes: &[u8]) -> Result<Ipv6Address> {
         if bytes.len() == 16 {
             Ok(Ipv6Address::from_bytes(bytes))
@@ -357,18 +357,18 @@ mod std {
     #[cfg(feature = "proto-ipv6")]
     use ::std::net::{Ipv6Addr, SocketAddrV6 as StdSocketAddrV6};
 
-    #[cfg(all(feature = "proto-ipv4"))]
+    #[cfg(feature = "proto-ipv4")]
     use smoltcp::wire::Ipv4Address;
-    #[cfg(all(feature = "proto-ipv6"))]
+    #[cfg(feature = "proto-ipv6")]
     use smoltcp::wire::Ipv6Address;
     #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
     use smoltcp::wire::{IpAddress, IpEndpoint};
 
     #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
     use super::SocketAddr;
-    #[cfg(all(feature = "proto-ipv4"))]
+    #[cfg(feature = "proto-ipv4")]
     use super::SocketAddrV4;
-    #[cfg(all(feature = "proto-ipv6"))]
+    #[cfg(feature = "proto-ipv6")]
     use super::SocketAddrV6;
     use super::{Error, Result};
 
@@ -485,7 +485,7 @@ mod tests {
 
     use super::*;
 
-    #[cfg(all(feature = "proto-ipv4"))]
+    #[cfg(feature = "proto-ipv4")]
     #[test]
     fn ipv4_socket_addr() {
         if env::var("RUST_LOG").is_err() {
@@ -511,7 +511,7 @@ mod tests {
         assert_eq!(socket_addr.port, 8080);
     }
 
-    #[cfg(all(feature = "proto-ipv6"))]
+    #[cfg(feature = "proto-ipv6")]
     #[test]
     fn ipv6_socket_addr() {
         if env::var("RUST_LOG").is_err() {
