@@ -8,7 +8,7 @@ use byteorder::{BigEndian, ByteOrder};
 use smoltcp::wire::Ipv4Address;
 #[cfg(feature = "proto-ipv6")]
 use smoltcp::wire::Ipv6Address;
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 use smoltcp::wire::{IpAddress, IpEndpoint};
 
 #[cfg(feature = "proto-ipv4")]
@@ -51,31 +51,37 @@ pub fn port_to_bytes(port: u16) -> [u8; 2] {
     buf
 }
 
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 #[derive(Copy, Clone, Eq, Hash, PartialEq)]
 pub enum SocketAddr {
     /// An IPv4 socket address.
+    #[cfg(feature = "proto-ipv4")]
     V4(SocketAddrV4),
     /// An IPv6 socket address.
+    #[cfg(feature = "proto-ipv6")]
     V6(SocketAddrV6),
 }
 
 #[allow(clippy::len_without_is_empty)]
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl SocketAddr {
     pub fn new(ip: IpAddress, port: u16) -> Result<Self> {
         match ip {
+            #[cfg(feature = "proto-ipv4")]
             IpAddress::Ipv4(ip) => Ok(SocketAddr::new_v4(ip, port)),
+            #[cfg(feature = "proto-ipv6")]
             IpAddress::Ipv6(ip) => Ok(SocketAddr::V6(SocketAddrV6::new(ip, port))),
             IpAddress::Unspecified => Err(Error::UnspecifiedIp),
             _ => unreachable!(),
         }
     }
 
+    #[cfg(feature = "proto-ipv4")]
     pub fn new_v4(ip: Ipv4Address, port: u16) -> Self {
         SocketAddr::V4(SocketAddrV4::new(ip, port))
     }
 
+    #[cfg(feature = "proto-ipv4")]
     pub fn v4_from_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() == LEN_V4 {
             let ip_addr = ipv4_addr_from_bytes(&bytes[0..LEN_V4 - 2])?;
@@ -87,14 +93,17 @@ impl SocketAddr {
         }
     }
 
+    #[cfg(feature = "proto-ipv4")]
     pub fn new_ip4_port(a0: u8, a1: u8, a2: u8, a3: u8, port: u16) -> Self {
         SocketAddr::V4(SocketAddrV4::new_ip4_port(a0, a1, a2, a3, port))
     }
 
+    #[cfg(feature = "proto-ipv6")]
     pub fn new_v6(ip: Ipv6Address, port: u16) -> Self {
         SocketAddr::V6(SocketAddrV6::new(ip, port))
     }
 
+    #[cfg(feature = "proto-ipv6")]
     pub fn v6_from_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() == LEN_V6 {
             let ip_addr = ipv6_addr_from_bytes(&bytes[0..LEN_V6 - 2])?;
@@ -106,6 +115,7 @@ impl SocketAddr {
         }
     }
 
+    #[cfg(feature = "proto-ipv6")]
     #[allow(clippy::too_many_arguments)]
     pub fn new_ip6_port(
         a0: u16,
@@ -125,61 +135,75 @@ impl SocketAddr {
 
     pub fn len(&self) -> usize {
         match self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(addr) => addr.len(),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => addr.len(),
         }
     }
 
     pub fn ip(&self) -> IpAddress {
         match self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(addr) => IpAddress::Ipv4(addr.addr),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => IpAddress::Ipv6(addr.addr),
         }
     }
 
     pub fn ip_octets(&self) -> Vec<u8> {
         match self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(addr) => addr.addr.0.to_vec(),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => addr.addr.0.to_vec(),
         }
     }
 
     pub fn port(&self) -> u16 {
         match self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(addr) => addr.port,
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => addr.port,
         }
     }
 
     pub fn to_vec(&self) -> Vec<u8> {
         match self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(addr) => addr.to_vec(),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => addr.to_vec(),
         }
     }
 }
 
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl From<SocketAddr> for IpEndpoint {
     fn from(val: SocketAddr) -> Self {
         match val {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(val) => IpEndpoint::new(IpAddress::Ipv4(val.addr), val.port),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(val) => IpEndpoint::new(IpAddress::Ipv6(val.addr), val.port),
         }
     }
 }
 
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl fmt::Display for SocketAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match *self {
+            #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(ref a) => a.fmt(f),
+            #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(ref a) => a.fmt(f),
         }
     }
 }
 
-#[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl fmt::Debug for SocketAddr {
     fn fmt(&self, fmt: &mut fmt::Formatter<'_>) -> fmt::Result {
         fmt::Display::fmt(self, fmt)
@@ -361,10 +385,10 @@ mod std {
     use smoltcp::wire::Ipv4Address;
     #[cfg(feature = "proto-ipv6")]
     use smoltcp::wire::Ipv6Address;
-    #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+    #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
     use smoltcp::wire::{IpAddress, IpEndpoint};
 
-    #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+    #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
     use super::SocketAddr;
     #[cfg(feature = "proto-ipv4")]
     use super::SocketAddrV4;
@@ -454,7 +478,7 @@ mod std {
         }
     }
 
-    #[cfg(all(feature = "std", feature = "proto-ipv4", feature = "proto-ipv6"))]
+    #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
     impl From<StdSocketAddr> for SocketAddr {
         fn from(val: StdSocketAddr) -> Self {
             match val {
@@ -495,13 +519,13 @@ mod tests {
 
         let ip_address_bytes = [127, 0, 0, 1];
         let ip_address: Ipv4Address = ipv4_addr(127, 0, 0, 1);
-        info!("ip_address: {}", ip_address);
-        info!("ip_address debug: {:?}", ip_address);
+        info!("ip4 ip_address: {}", ip_address);
+        info!("ip4 ip_address debug: {:?}", ip_address);
         assert_eq!(ip_address.as_bytes(), &ip_address_bytes);
 
         let socket_addr = SocketAddrV4::new_ip4_port(127, 0, 0, 1, 8080);
-        info!("socket_addr: {}", socket_addr);
-        info!("socket_addr debug: {:?}", socket_addr);
+        info!("ip4 socket_addr: {}", socket_addr);
+        info!("ip4 socket_addr debug: {:?}", socket_addr);
         assert_eq!(socket_addr.len(), LEN_V4);
         assert_eq!(socket_addr.addr.as_bytes(), &ip_address_bytes);
         assert_eq!(
@@ -520,16 +544,16 @@ mod tests {
         let _ = pretty_env_logger::try_init_timed();
 
         let ip_address_bytes: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1];
-        info!("ip_address_bytes: {:x?}", ip_address_bytes);
+        info!("ip6 ip_address_bytes: {:x?}", ip_address_bytes);
 
         let ip_address: Ipv6Address = ipv6_addr(0, 0, 0, 0, 0, 0, 0, 1);
-        info!("ip_address: {}", ip_address);
-        info!("ip_address debug: {:?}", ip_address);
+        info!("ip6 ip_address: {}", ip_address);
+        info!("ip6 ip_address debug: {:?}", ip_address);
         assert_eq!(ip_address.as_bytes(), &ip_address_bytes);
 
         let socket_addr = SocketAddrV6::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, 8080);
-        info!("socket_addr: {}", socket_addr);
-        info!("socket_addr debug: {:?}", socket_addr);
+        info!("ip6 socket_addr: {}", socket_addr);
+        info!("ip6 socket_addr debug: {:?}", socket_addr);
         assert_eq!(socket_addr.len(), LEN_V6);
         assert_eq!(socket_addr.addr.as_bytes(), &ip_address_bytes);
         assert_eq!(
@@ -573,8 +597,8 @@ mod tests {
         let socket_addr_vec = socket_addr.to_vec();
         assert_eq!(socket_addr_vec[0..4], ip_address_bytes);
         assert_eq!(port_from_bytes(socket_addr_vec[4], socket_addr_vec[5]), 80);
-        info!("socket_addr: {}", socket_addr);
-        info!("socket_addr debug: {:?}", socket_addr);
+        info!("ip4 socket_addr: {}", socket_addr);
+        info!("ip4 socket_addr debug: {:?}", socket_addr);
 
         let std_socket_addr: StdSocketAddr = socket_addr.into();
         assert!(std_socket_addr.ip().is_loopback());
@@ -626,8 +650,8 @@ mod tests {
             port_from_bytes(socket_addr_vec[16], socket_addr_vec[17]),
             80
         );
-        info!("socket_addr: {}", socket_addr);
-        info!("socket_addr debug: {:?}", socket_addr);
+        info!("ip6 socket_addr: {}", socket_addr);
+        info!("ip6 socket_addr debug: {:?}", socket_addr);
 
         let std_socket_addr: StdSocketAddr = socket_addr.into();
         assert!(std_socket_addr.ip().is_loopback());
