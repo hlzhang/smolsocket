@@ -14,3 +14,8 @@ cargo test --no-default-features --features=proto-ipv6
 cargo test --no-default-features --features=proto-ipv4,proto-ipv6
 cargo test --no-default-features --features=proto-ipv4,proto-ipv6,std
 ```
+
+standard version
+```shell script
+npx standard-version --dry-run
+```
