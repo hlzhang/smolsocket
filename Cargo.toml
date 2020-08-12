@@ -1,6 +1,6 @@
 [package]
 name = "smolsocket"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["hlzhang <hlzhang@users.noreply.github.com>"]
 edition = "2018"
 license-file = "LICENSE.md"

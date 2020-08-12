@@ -177,6 +177,15 @@ impl SocketAddr {
             SocketAddr::V6(addr) => addr.to_vec(),
         }
     }
+
+    pub fn emmit(&self, bytes: &mut [u8]) {
+        match self {
+            #[cfg(feature = "proto-ipv4")]
+            SocketAddr::V4(addr) => addr.emmit(bytes),
+            #[cfg(feature = "proto-ipv6")]
+            SocketAddr::V6(addr) => addr.emmit(bytes),
+        }
+    }
 }
 
 #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
@@ -259,6 +268,11 @@ mod ipv4 {
             result.extend_from_slice(&self.addr.0);
             result.extend_from_slice(&port_to_bytes(self.port));
             result
+        }
+
+        pub fn emmit(&self, bytes: &mut [u8]) {
+            bytes[0..4].copy_from_slice(&self.addr.0);
+            bytes[4..6].copy_from_slice(&port_to_bytes(self.port));
         }
     }
 
@@ -356,6 +370,11 @@ mod ipv6 {
             result.extend_from_slice(&self.addr.0);
             result.extend_from_slice(&port_to_bytes(self.port));
             result
+        }
+
+        pub fn emmit(&self, bytes: &mut [u8]) {
+            bytes[0..16].copy_from_slice(&self.addr.0);
+            bytes[16..18].copy_from_slice(&port_to_bytes(self.port));
         }
     }
 
@@ -533,6 +552,11 @@ mod tests {
             &socket_addr.to_vec().as_slice()[0..4]
         );
         assert_eq!(socket_addr.port, 8080);
+
+        let mut bytes = vec![0 as u8; 6];
+        socket_addr.emmit(&mut bytes);
+        assert_eq!(socket_addr.addr.as_bytes(), &bytes[0..4]);
+        assert_eq!(port_from_bytes(bytes[4], bytes[5]), 8080);
     }
 
     #[cfg(feature = "proto-ipv6")]
@@ -561,6 +585,11 @@ mod tests {
             &socket_addr.to_vec().as_slice()[0..16]
         );
         assert_eq!(socket_addr.port, 8080);
+
+        let mut bytes = vec![0 as u8; 18];
+        socket_addr.emmit(&mut bytes);
+        assert_eq!(socket_addr.addr.as_bytes(), &bytes[0..16]);
+        assert_eq!(port_from_bytes(bytes[16], bytes[17]), 8080);
     }
 
     #[cfg(all(feature = "std", feature = "proto-ipv4", feature = "proto-ipv6"))]
