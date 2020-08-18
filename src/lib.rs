@@ -1,7 +1,7 @@
 #[cfg_attr(test, macro_use)]
 extern crate log;
 
-use core::fmt;
+use core::{convert::TryFrom, fmt};
 
 use byteorder::{BigEndian, ByteOrder};
 #[cfg(feature = "proto-ipv4")]
@@ -196,6 +196,21 @@ impl From<SocketAddr> for IpEndpoint {
             SocketAddr::V4(val) => IpEndpoint::new(IpAddress::Ipv4(val.addr), val.port),
             #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(val) => IpEndpoint::new(IpAddress::Ipv6(val.addr), val.port),
+        }
+    }
+}
+
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
+impl TryFrom<&[u8]> for SocketAddr {
+    type Error = Error;
+
+    fn try_from(value: &[u8]) -> Result<Self> {
+        match value.len() {
+            #[cfg(feature = "proto-ipv4")]
+            6 => SocketAddr::v4_from_bytes(value),
+            #[cfg(feature = "proto-ipv6")]
+            18 => SocketAddr::v6_from_bytes(value),
+            _ => Err(Error::AddrParseError),
         }
     }
 }
@@ -557,6 +572,8 @@ mod tests {
         socket_addr.emmit(&mut bytes);
         assert_eq!(socket_addr.addr.as_bytes(), &bytes[0..4]);
         assert_eq!(port_from_bytes(bytes[4], bytes[5]), 8080);
+
+        assert_eq!(SocketAddr::try_from(bytes.as_slice()), Ok(SocketAddr::V4(socket_addr)));
     }
 
     #[cfg(feature = "proto-ipv6")]
@@ -590,6 +607,8 @@ mod tests {
         socket_addr.emmit(&mut bytes);
         assert_eq!(socket_addr.addr.as_bytes(), &bytes[0..16]);
         assert_eq!(port_from_bytes(bytes[16], bytes[17]), 8080);
+
+        assert_eq!(SocketAddr::try_from(bytes.as_slice()), Ok(SocketAddr::V6(socket_addr)));
     }
 
     #[cfg(all(feature = "std", feature = "proto-ipv4", feature = "proto-ipv6"))]
