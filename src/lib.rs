@@ -4,12 +4,12 @@ extern crate log;
 use core::{convert::TryFrom, fmt};
 
 use byteorder::{BigEndian, ByteOrder};
+#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
+use smoltcp::wire::{IpAddress, IpEndpoint};
 #[cfg(feature = "proto-ipv4")]
 use smoltcp::wire::Ipv4Address;
 #[cfg(feature = "proto-ipv6")]
 use smoltcp::wire::Ipv6Address;
-#[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
-use smoltcp::wire::{IpAddress, IpEndpoint};
 
 #[cfg(feature = "proto-ipv4")]
 pub use crate::ipv4::{ipv4_addr, ipv4_addr_from_bytes, SocketAddrV4};
@@ -82,6 +82,11 @@ impl SocketAddr {
     }
 
     #[cfg(feature = "proto-ipv4")]
+    pub fn new_v4_all_zeros() -> Self {
+        SocketAddr::new_ip4_port(0, 0, 0, 0, 0)
+    }
+
+    #[cfg(feature = "proto-ipv4")]
     pub fn v4_from_bytes(bytes: &[u8]) -> Result<Self> {
         if bytes.len() == LEN_V4 {
             let ip_addr = ipv4_addr_from_bytes(&bytes[0..LEN_V4 - 2])?;
@@ -101,6 +106,11 @@ impl SocketAddr {
     #[cfg(feature = "proto-ipv6")]
     pub fn new_v6(ip: Ipv6Address, port: u16) -> Self {
         SocketAddr::V6(SocketAddrV6::new(ip, port))
+    }
+
+    #[cfg(feature = "proto-ipv6")]
+    pub fn new_v6_all_zeros() -> Self {
+        SocketAddr::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 0, 0)
     }
 
     #[cfg(feature = "proto-ipv6")]
@@ -240,7 +250,7 @@ mod ipv4 {
 
     use smoltcp::wire::Ipv4Address;
 
-    use super::{port_to_bytes, Error, Result, LEN_V4};
+    use super::{Error, LEN_V4, port_to_bytes, Result};
 
     pub fn ipv4_addr_from_bytes(bytes: &[u8]) -> Result<Ipv4Address> {
         if bytes.len() == 4 {
@@ -311,7 +321,7 @@ mod ipv6 {
     use byteorder::{BigEndian, ByteOrder};
     use smoltcp::wire::Ipv6Address;
 
-    use super::{port_to_bytes, Error, Result, LEN_V6};
+    use super::{Error, LEN_V6, port_to_bytes, Result};
 
     #[cfg(feature = "proto-ipv6")]
     pub fn ipv6_addr_from_bytes(bytes: &[u8]) -> Result<Ipv6Address> {
@@ -415,20 +425,20 @@ mod std {
     #[cfg(feature = "proto-ipv6")]
     use ::std::net::{Ipv6Addr, SocketAddrV6 as StdSocketAddrV6};
 
+    #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
+    use smoltcp::wire::{IpAddress, IpEndpoint};
     #[cfg(feature = "proto-ipv4")]
     use smoltcp::wire::Ipv4Address;
     #[cfg(feature = "proto-ipv6")]
     use smoltcp::wire::Ipv6Address;
-    #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
-    use smoltcp::wire::{IpAddress, IpEndpoint};
 
+    use super::{Error, Result};
     #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
     use super::SocketAddr;
     #[cfg(feature = "proto-ipv4")]
     use super::SocketAddrV4;
     #[cfg(feature = "proto-ipv6")]
     use super::SocketAddrV6;
-    use super::{Error, Result};
 
     #[cfg(feature = "proto-ipv4")]
     pub trait IntoStdIpv4Addr: Sized {
