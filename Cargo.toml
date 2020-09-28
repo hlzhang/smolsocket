@@ -20,20 +20,26 @@ exclude = [
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+bytes = { version = "0.5", optional = true }
 byteorder = "1"
+futures = { version = "0.3.0", optional = true }
 log = "0.4"
 smoltcp = { version = "0.6.0", default-features = false, features = [] }
+tokio = { version = "0.2.22", default-features = false, features = ["full"], optional = true }
+tokio-util = { version = "0.3.0", features = ["full"], optional = true }
 
 [dev-dependencies]
 pretty_env_logger = "0.3"
 
 [features]
+rt_tokio = ["bytes", "futures", "std", "tokio", "tokio-util"]
 std = ["smoltcp/std"]
 verbose = []
 "proto-ipv4" = ["smoltcp/proto-ipv4"]
 "proto-ipv6" = ["smoltcp/proto-ipv6"]
 # `RUST_BACKTRACE=1 cargo test --lib --no-default-features --features default -- --exact --nocapture --test-threads=1`
 default = [
-  "std",
-  "proto-ipv4", "proto-ipv6"
+    "rt_tokio",
+    "std",
+    "proto-ipv4", "proto-ipv6"
 ]

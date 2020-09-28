@@ -4,12 +4,16 @@ extern crate log;
 use core::{convert::TryFrom, fmt};
 
 use byteorder::{BigEndian, ByteOrder};
+#[cfg(feature = "rt_tokio")]
+use futures::prelude::*;
 #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 use smoltcp::wire::{IpAddress, IpEndpoint};
 #[cfg(feature = "proto-ipv4")]
 use smoltcp::wire::Ipv4Address;
 #[cfg(feature = "proto-ipv6")]
 use smoltcp::wire::Ipv6Address;
+#[cfg(feature = "rt_tokio")]
+use tokio_util::{codec::*, udp::*};
 
 #[cfg(feature = "proto-ipv4")]
 pub use crate::ipv4::{ipv4_addr, ipv4_addr_from_bytes, SocketAddrV4};
@@ -19,6 +23,13 @@ pub use crate::ipv6::{ipv6_addr, ipv6_addr_from_bytes, SocketAddrV6};
 pub use crate::std::*;
 
 type Result<T> = core::result::Result<T, Error>;
+
+#[cfg(feature = "rt_tokio")]
+pub type TokioUdpPacket = (bytes::Bytes, ::std::net::SocketAddr);
+#[cfg(feature = "rt_tokio")]
+pub type TokioUdpBytesSink = stream::SplitSink<UdpFramed<BytesCodec>, TokioUdpPacket>;
+#[cfg(feature = "rt_tokio")]
+pub type TokioUdpBytesStream = stream::SplitStream<UdpFramed<BytesCodec>>;
 
 pub const LEN_V4: usize = 6;
 pub const LEN_V6: usize = 18;
@@ -195,6 +206,26 @@ impl SocketAddr {
             #[cfg(feature = "proto-ipv6")]
             SocketAddr::V6(addr) => addr.emmit(bytes),
         }
+    }
+
+    #[cfg(feature = "rt_tokio")]
+    pub async fn to_udp_socket(&self) -> ::std::io::Result<tokio::net::UdpSocket> {
+        let addr: ::std::net::SocketAddr = self.into();
+        tokio::net::UdpSocket::bind(addr).await
+    }
+
+    #[cfg(feature = "rt_tokio")]
+    pub async fn to_udp_framed(&self) -> ::std::io::Result<(Self, UdpFramed<BytesCodec>)> {
+        let udp_socket = self.to_udp_socket().await?;
+        let local_addr = udp_socket.local_addr()?;
+        Ok((local_addr.into(), UdpFramed::new(udp_socket, BytesCodec::new())))
+    }
+
+    #[cfg(feature = "rt_tokio")]
+    pub async fn to_udp_splited(&self) -> ::std::io::Result<(Self, TokioUdpBytesSink, TokioUdpBytesStream)> {
+        let (local_addr, framed) = self.to_udp_framed().await?;
+        let (sink, stream) = framed.split();
+        Ok((local_addr, sink, stream))
     }
 }
 
