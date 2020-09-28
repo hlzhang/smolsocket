@@ -209,20 +209,37 @@ impl SocketAddr {
     }
 
     #[cfg(feature = "rt_tokio")]
-    pub async fn to_udp_socket(&self) -> ::std::io::Result<tokio::net::UdpSocket> {
+    pub async fn bind_udp(&self) -> ::std::io::Result<(Self, tokio::net::UdpSocket)> {
         let addr: ::std::net::SocketAddr = self.into();
-        tokio::net::UdpSocket::bind(addr).await
+        let udp_socket = tokio::net::UdpSocket::bind(addr).await?;
+        let local_addr = udp_socket.local_addr()?.into();
+        Ok((local_addr, udp_socket))
+    }
+
+    #[cfg(feature = "rt_tokio")]
+    pub async fn bind_tcp(&self) -> ::std::io::Result<(Self, tokio::net::TcpListener)> {
+        let addr: ::std::net::SocketAddr = self.into();
+        let listener = tokio::net::TcpListener::bind(addr).await?;
+        let local_addr = listener.local_addr()?.into();
+        Ok((local_addr, listener))
+    }
+
+    #[cfg(feature = "rt_tokio")]
+    pub async fn connect_tcp(&self) -> ::std::io::Result<(Self, tokio::net::TcpStream)> {
+        let addr: ::std::net::SocketAddr = self.into();
+        let ts = tokio::net::TcpStream::connect(addr).await?;
+        let local_addr = ts.local_addr()?.into();
+        Ok((local_addr, ts))
     }
 
     #[cfg(feature = "rt_tokio")]
     pub async fn to_udp_framed(&self) -> ::std::io::Result<(Self, UdpFramed<BytesCodec>)> {
-        let udp_socket = self.to_udp_socket().await?;
-        let local_addr = udp_socket.local_addr()?;
-        Ok((local_addr.into(), UdpFramed::new(udp_socket, BytesCodec::new())))
+        let (local_addr, udp_socket) = self.bind_udp().await?;
+        Ok((local_addr, UdpFramed::new(udp_socket, BytesCodec::new())))
     }
 
     #[cfg(feature = "rt_tokio")]
-    pub async fn to_udp_splited(&self) -> ::std::io::Result<(Self, TokioUdpBytesSink, TokioUdpBytesStream)> {
+    pub async fn to_udp_split(&self) -> ::std::io::Result<(Self, TokioUdpBytesSink, TokioUdpBytesStream)> {
         let (local_addr, framed) = self.to_udp_framed().await?;
         let (sink, stream) = framed.split();
         Ok((local_addr, sink, stream))
