@@ -114,6 +114,11 @@ impl SocketAddr {
         SocketAddr::V4(SocketAddrV4::new_ip4_port(a0, a1, a2, a3, port))
     }
 
+    #[cfg(feature = "proto-ipv4")]
+    pub fn new_ip4_loopback(port: u16) -> Self {
+        SocketAddr::V4(SocketAddrV4::new_ip4_port(127, 0, 0, 1, port))
+    }
+
     #[cfg(feature = "proto-ipv6")]
     pub fn new_v6(ip: Ipv6Address, port: u16) -> Self {
         SocketAddr::V6(SocketAddrV6::new(ip, port))
@@ -152,6 +157,11 @@ impl SocketAddr {
         SocketAddr::V6(SocketAddrV6::new_ip6_port(
             a0, a1, a2, a3, a4, a5, a6, a7, port,
         ))
+    }
+
+    #[cfg(feature = "proto-ipv6")]
+    pub fn new_ip6_loopback(port: u16) -> Self {
+        SocketAddr::V6(SocketAddrV6::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, port))
     }
 
     pub fn len(&self) -> usize {
@@ -585,6 +595,22 @@ mod std {
             }
         }
     }
+
+    #[cfg(all(feature = "proto-ipv4", feature = "proto-ipv6"))]
+    impl From<&StdSocketAddr> for SocketAddr {
+        fn from(val: &StdSocketAddr) -> Self {
+            match val {
+                StdSocketAddr::V4(val) => SocketAddr::V4(SocketAddrV4 {
+                    addr: Ipv4Address::from(*val.ip()),
+                    port: val.port(),
+                }),
+                StdSocketAddr::V6(val) => SocketAddr::V6(SocketAddrV6 {
+                    addr: Ipv6Address::from(*val.ip()),
+                    port: val.port(),
+                }),
+            }
+        }
+    }
 }
 
 #[cfg(test)]
@@ -706,6 +732,11 @@ mod tests {
         info!("ip4 socket_addr: {}", socket_addr);
         info!("ip4 socket_addr debug: {:?}", socket_addr);
 
+        let std_socket_addr: StdSocketAddr = (&socket_addr).into();
+        assert!(std_socket_addr.ip().is_loopback());
+        assert_eq!(std_socket_addr.ip().to_string(), "127.0.0.1".to_string());
+        assert_eq!(std_socket_addr.port(), socket_addr_v4.port);
+        assert_eq!(std_socket_addr.port(), socket_addr.port());
         let std_socket_addr: StdSocketAddr = socket_addr.into();
         assert!(std_socket_addr.ip().is_loopback());
         assert_eq!(std_socket_addr.ip().to_string(), "127.0.0.1".to_string());
@@ -759,6 +790,11 @@ mod tests {
         info!("ip6 socket_addr: {}", socket_addr);
         info!("ip6 socket_addr debug: {:?}", socket_addr);
 
+        let std_socket_addr: StdSocketAddr = (&socket_addr).into();
+        assert!(std_socket_addr.ip().is_loopback());
+        assert_eq!(std_socket_addr.ip().to_string(), "::1".to_string());
+        assert_eq!(std_socket_addr.port(), socket_addr_v6.port);
+        assert_eq!(std_socket_addr.port(), socket_addr.port());
         let std_socket_addr: StdSocketAddr = socket_addr.into();
         assert!(std_socket_addr.ip().is_loopback());
         assert_eq!(std_socket_addr.ip().to_string(), "::1".to_string());
