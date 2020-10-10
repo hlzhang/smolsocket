@@ -611,6 +611,26 @@ mod std {
             }
         }
     }
+
+    impl<I: Into<::std::net::IpAddr>> From<(I, u16)> for SocketAddr {
+        /// Converts a tuple struct (Into<[`IpAddr`]>, `u16`) into a [`SocketAddr`].
+        ///
+        /// This conversion creates a [`SocketAddr::V4`] for a [`IpAddr::V4`]
+        /// and creates a [`SocketAddr::V6`] for a [`IpAddr::V6`].
+        ///
+        /// `u16` is treated as port of the newly created [`SocketAddr`].
+        ///
+        /// [`IpAddr`]: ::std::net::IpAddr
+        /// [`IpAddr::V4`]: ::std::net::IpAddr::V4
+        /// [`IpAddr::V6`]: ::std::net::IpAddr::V6
+        /// [`SocketAddr`]: ../enum.SocketAddr.html
+        /// [`SocketAddr::V4`]: ../enum.SocketAddr.html#variant.V4
+        /// [`SocketAddr::V6`]: ../enum.SocketAddr.html#variant.V6
+        fn from(pieces: (I, u16)) -> SocketAddr {
+            let ip = pieces.0.into();
+            ::std::net::SocketAddr::new(ip, pieces.1).into()
+        }
+    }
 }
 
 #[cfg(test)]
