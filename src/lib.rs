@@ -33,6 +33,8 @@ pub type TokioUdpBytesStream = stream::SplitStream<UdpFramed<BytesCodec>>;
 
 pub const LEN_V4: usize = 6;
 pub const LEN_V6: usize = 18;
+const ZERO_V4: [u8; 4] = [0, 0, 0, 0];
+const ZERO_V6: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
@@ -162,6 +164,33 @@ impl SocketAddr {
     #[cfg(feature = "proto-ipv6")]
     pub fn new_ip6_loopback(port: u16) -> Self {
         SocketAddr::V6(SocketAddrV6::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, port))
+    }
+
+    pub fn is_zero(&self) -> bool {
+        match self {
+            #[cfg(feature = "proto-ipv4")]
+            SocketAddr::V4(addr) => addr.is_zero(),
+            #[cfg(feature = "proto-ipv6")]
+            SocketAddr::V6(addr) => addr.is_zero(),
+        }
+    }
+
+    pub fn is_zero_addr(&self) -> bool {
+        match self {
+            #[cfg(feature = "proto-ipv4")]
+            SocketAddr::V4(addr) => addr.is_zero_addr(),
+            #[cfg(feature = "proto-ipv6")]
+            SocketAddr::V6(addr) => addr.is_zero_addr(),
+        }
+    }
+
+    pub fn is_zero_port(&self) -> bool {
+        match self {
+            #[cfg(feature = "proto-ipv4")]
+            SocketAddr::V4(addr) => addr.is_zero_port(),
+            #[cfg(feature = "proto-ipv6")]
+            SocketAddr::V6(addr) => addr.is_zero_port(),
+        }
     }
 
     pub fn len(&self) -> usize {
@@ -308,7 +337,7 @@ mod ipv4 {
 
     use smoltcp::wire::Ipv4Address;
 
-    use super::{Error, LEN_V4, port_to_bytes, Result};
+    use super::{Error, LEN_V4, port_to_bytes, Result, ZERO_V4};
 
     pub fn ipv4_addr_from_bytes(bytes: &[u8]) -> Result<Ipv4Address> {
         if bytes.len() == 4 {
@@ -340,6 +369,18 @@ mod ipv4 {
                 addr: Ipv4Address::new(a0, a1, a2, a3),
                 port,
             }
+        }
+
+        pub fn is_zero(&self) -> bool {
+            self.is_zero_addr() && self.is_zero_port()
+        }
+
+        pub fn is_zero_addr(&self) -> bool {
+            self.addr.0 == ZERO_V4
+        }
+
+        pub fn is_zero_port(&self) -> bool {
+            self.port == 0
         }
 
         pub fn len(&self) -> usize {
@@ -379,7 +420,7 @@ mod ipv6 {
     use byteorder::{BigEndian, ByteOrder};
     use smoltcp::wire::Ipv6Address;
 
-    use super::{Error, LEN_V6, port_to_bytes, Result};
+    use super::{Error, LEN_V6, port_to_bytes, Result, ZERO_V6};
 
     #[cfg(feature = "proto-ipv6")]
     pub fn ipv6_addr_from_bytes(bytes: &[u8]) -> Result<Ipv6Address> {
@@ -442,6 +483,18 @@ mod ipv6 {
                 addr: Ipv6Address::new(a0, a1, a2, a3, a4, a5, a6, a7),
                 port,
             }
+        }
+
+        pub fn is_zero(&self) -> bool {
+            self.is_zero_addr() && self.is_zero_port()
+        }
+
+        pub fn is_zero_addr(&self) -> bool {
+            self.addr.0 == ZERO_V6
+        }
+
+        pub fn is_zero_port(&self) -> bool {
+            self.port == 0
         }
 
         pub fn len(&self) -> usize {
@@ -820,5 +873,45 @@ mod tests {
         assert_eq!(std_socket_addr.ip().to_string(), "::1".to_string());
         assert_eq!(std_socket_addr.port(), socket_addr_v6.port);
         assert_eq!(std_socket_addr.port(), socket_addr.port());
+    }
+
+    #[cfg(feature = "proto-ipv4")]
+    #[test]
+    fn v4_zero() {
+        if env::var("RUST_LOG").is_err() {
+            env::set_var("RUST_LOG", "debug");
+        }
+        let _ = pretty_env_logger::try_init_timed();
+
+        let ip = ipv4_addr(0, 0, 0, 0);
+        let socket_addr = SocketAddrV4::new(ip, 0);
+        assert!(socket_addr.is_zero_addr());
+        assert!(socket_addr.is_zero_port());
+        assert!(socket_addr.is_zero());
+
+        let socket_addr = SocketAddr::V4(socket_addr);
+        assert!(socket_addr.is_zero_addr());
+        assert!(socket_addr.is_zero_port());
+        assert!(socket_addr.is_zero());
+    }
+
+    #[cfg(feature = "proto-ipv6")]
+    #[test]
+    fn v6_zero() {
+        if env::var("RUST_LOG").is_err() {
+            env::set_var("RUST_LOG", "debug");
+        }
+        let _ = pretty_env_logger::try_init_timed();
+
+        let ip = ipv6_addr(0, 0, 0, 0, 0, 0, 0, 0);
+        let socket_addr = SocketAddrV6::new(ip, 0);
+        assert!(socket_addr.is_zero_addr());
+        assert!(socket_addr.is_zero_port());
+        assert!(socket_addr.is_zero());
+
+        let socket_addr = SocketAddr::V6(socket_addr);
+        assert!(socket_addr.is_zero_addr());
+        assert!(socket_addr.is_zero_port());
+        assert!(socket_addr.is_zero());
     }
 }
