@@ -796,6 +796,8 @@ mod tests {
         );
         assert_eq!(socket_addr, SocketAddr::new_v4(ip_address, 80));
         assert_eq!(socket_addr, SocketAddr::new_ip4_port(127, 0, 0, 1, 80));
+        assert_eq!(SocketAddr::new_ip4_port(0, 0, 0, 0, 0), SocketAddr::new_v4_all_zeros());
+        assert_eq!(SocketAddr::V4(SocketAddrV4::new_ip4_port(127, 0, 0, 1, 80)), SocketAddr::new_ip4_loopback(80));
         assert_eq!(socket_addr.len(), LEN_V4);
         assert_eq!(socket_addr.ip().as_bytes(), ip_address_bytes);
         assert_eq!(socket_addr.ip_octets(), ip_address_bytes);
@@ -851,6 +853,8 @@ mod tests {
             socket_addr,
             SocketAddr::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, 80)
         );
+        assert_eq!(SocketAddr::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 0, 0), SocketAddr::new_v6_all_zeros());
+        assert_eq!(SocketAddr::V6(SocketAddrV6::new_ip6_port(0, 0, 0, 0, 0, 0, 0, 1, 80)), SocketAddr::new_ip6_loopback(80));
         assert_eq!(socket_addr.len(), LEN_V6);
         assert_eq!(socket_addr.ip().as_bytes(), ip_address_bytes);
         assert_eq!(socket_addr.ip_octets(), ip_address_bytes);
