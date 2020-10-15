@@ -315,7 +315,7 @@ impl TryFrom<&[u8]> for SocketAddr {
 #[cfg(any(feature = "proto-ipv4", feature = "proto-ipv6"))]
 impl fmt::Display for SocketAddr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match *self {
+        match self {
             #[cfg(feature = "proto-ipv4")]
             SocketAddr::V4(ref a) => a.fmt(f),
             #[cfg(feature = "proto-ipv6")]
