@@ -247,6 +247,15 @@ impl SocketAddr {
         }
     }
 
+    pub fn with_port(&self, port: u16) -> Self {
+        match self {
+            #[cfg(feature = "proto-ipv4")]
+            SocketAddr::V4(addr) => Self::new_v4(addr.addr, port),
+            #[cfg(feature = "proto-ipv6")]
+            SocketAddr::V6(addr) => Self::new_v6(addr.addr, port),
+        }
+    }
+
     #[cfg(feature = "rt_tokio")]
     pub async fn bind_udp(&self) -> ::std::io::Result<(Self, tokio::net::UdpSocket)> {
         let addr: ::std::net::SocketAddr = self.into();
