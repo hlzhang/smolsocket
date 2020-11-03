@@ -38,8 +38,7 @@ const ZERO_V6: [u8; 16] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Error {
-    AddrParseError,
-    UnspecifiedIp,
+    Malformed,
 }
 
 impl ::std::error::Error for Error {}
@@ -47,8 +46,7 @@ impl ::std::error::Error for Error {}
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Error::AddrParseError => write!(f, "invalid IP address bytes"),
-            Error::UnspecifiedIp => write!(f, "UnspecifiedIp"),
+            Error::Malformed => write!(f, "Malformed"),
         }
     }
 }
@@ -84,7 +82,7 @@ impl SocketAddr {
             IpAddress::Ipv4(ip) => Ok(SocketAddr::new_v4(ip, port)),
             #[cfg(feature = "proto-ipv6")]
             IpAddress::Ipv6(ip) => Ok(SocketAddr::V6(SocketAddrV6::new(ip, port))),
-            IpAddress::Unspecified => Err(Error::UnspecifiedIp),
+            IpAddress::Unspecified => Err(Error::Malformed),
             _ => unreachable!(),
         }
     }
@@ -107,7 +105,7 @@ impl SocketAddr {
             let port = port_from_bytes(port_bytes[0], port_bytes[1]);
             Ok(SocketAddr::new_v4(ip_addr, port))
         } else {
-            Err(Error::AddrParseError)
+            Err(Error::Malformed)
         }
     }
 
@@ -139,7 +137,7 @@ impl SocketAddr {
             let port = port_from_bytes(port_bytes[0], port_bytes[1]);
             Ok(SocketAddr::new_v6(ip_addr, port))
         } else {
-            Err(Error::AddrParseError)
+            Err(Error::Malformed)
         }
     }
 
@@ -316,7 +314,7 @@ impl TryFrom<&[u8]> for SocketAddr {
             6 => SocketAddr::v4_from_bytes(value),
             #[cfg(feature = "proto-ipv6")]
             18 => SocketAddr::v6_from_bytes(value),
-            _ => Err(Error::AddrParseError),
+            _ => Err(Error::Malformed),
         }
     }
 }
@@ -352,7 +350,7 @@ mod ipv4 {
         if bytes.len() == 4 {
             Ok(Ipv4Address::from_bytes(bytes))
         } else {
-            Err(Error::AddrParseError)
+            Err(Error::Malformed)
         }
     }
 
@@ -436,7 +434,7 @@ mod ipv6 {
         if bytes.len() == 16 {
             Ok(Ipv6Address::from_bytes(bytes))
         } else {
-            Err(Error::AddrParseError)
+            Err(Error::Malformed)
         }
     }
 
@@ -595,7 +593,7 @@ mod std {
             match self {
                 IpAddress::Ipv4(ip) => Ok(ip.0.into()),
                 IpAddress::Ipv6(ip) => Ok(ip.0.into()),
-                IpAddress::Unspecified => Err(Error::UnspecifiedIp),
+                IpAddress::Unspecified => Err(Error::Malformed),
                 _ => unreachable!(),
             }
         }
@@ -800,7 +798,7 @@ mod tests {
             SocketAddr::new(IpAddress::Ipv4(ip_address), 80)
         );
         assert_eq!(
-            Err(Error::UnspecifiedIp),
+            Err(Error::Malformed),
             SocketAddr::new(IpAddress::Unspecified, 80)
         );
         assert_eq!(socket_addr, SocketAddr::new_v4(ip_address, 80));
@@ -854,7 +852,7 @@ mod tests {
             SocketAddr::new(IpAddress::Ipv6(ip_address), 80)
         );
         assert_eq!(
-            Err(Error::UnspecifiedIp),
+            Err(Error::Malformed),
             SocketAddr::new(IpAddress::Unspecified, 80)
         );
         assert_eq!(socket_addr, SocketAddr::new_v6(ip_address, 80));
