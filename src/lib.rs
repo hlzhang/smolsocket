@@ -925,4 +925,19 @@ mod tests {
         assert!(socket_addr.is_zero_port());
         assert!(socket_addr.is_zero());
     }
+
+    #[cfg(feature = "proto-ipv6")]
+    #[test]
+    fn v6_addr_to_string() {
+        if env::var("RUST_LOG").is_err() {
+            env::set_var("RUST_LOG", "debug");
+        }
+        let _ = pretty_env_logger::try_init_timed();
+
+        // 2404:6800:4006:809::200e (google.com)
+        let parts = vec![0x2404u16, 0x6800u16, 0x4006u16, 0x809u16, 0x0u16, 0x0u16, 0x0u16, 0x200eu16];
+        let addr_v6 = SocketAddr::new_v6(Ipv6Address::from_parts(&parts), 0);
+        info!("addr_v6: {}", addr_v6.to_string());
+        assert_eq!(addr_v6.to_string(), "[2404:6800:4006:809::200e]:0")
+    }
 }
